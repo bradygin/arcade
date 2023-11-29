@@ -62,8 +62,6 @@ void init() {
 }
 
 void update() {
-    // Update game logic for player
-
     // Update NPCs
     for (auto& npc : npcs) {
         npc.move();
