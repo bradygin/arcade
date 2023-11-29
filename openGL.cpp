@@ -5,6 +5,10 @@
 
 bool running = true;
 
+float playerX = 400.0;  // Initial X position of the player
+float playerY = 300.0;  // Initial Y position of the player
+float playerSize = 50.0;  // Size of the player
+
 void init() {
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glMatrixMode(GL_PROJECTION);
@@ -17,7 +21,15 @@ void update() {
 
 void render() {
     glClear(GL_COLOR_BUFFER_BIT);
-    // Draw objects here
+
+    // Draw the player as a red box
+    glColor3f(1.0, 0.0, 0.0);  // Red color
+    glBegin(GL_QUADS);
+    glVertex2f(playerX, playerY);
+    glVertex2f(playerX + playerSize, playerY);
+    glVertex2f(playerX + playerSize, playerY + playerSize);
+    glVertex2f(playerX, playerY + playerSize);
+    glEnd();
 
     glFlush();
 }
@@ -32,6 +44,24 @@ void idle() {
     render();
 }
 
+// Function to handle arrow key input for player movement
+void specialKeys(int key, int x, int y) {
+    switch (key) {
+        case GLUT_KEY_UP:
+            playerY += 10.0;  // Move up
+            break;
+        case GLUT_KEY_DOWN:
+            playerY -= 10.0;  // Move down
+            break;
+        case GLUT_KEY_LEFT:
+            playerX -= 10.0;  // Move left
+            break;
+        case GLUT_KEY_RIGHT:
+            playerX += 10.0;  // Move right
+            break;
+    }
+}
+
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
@@ -41,17 +71,13 @@ int main(int argc, char** argv) {
     init();
 
     glutDisplayFunc(render);
-    glutTimerFunc(0, timer, 0); // Start the timer with a delay of 0 milliseconds
-    glutIdleFunc(idle); // Set the idle function
+    glutTimerFunc(0, timer, 0);
+    glutIdleFunc(idle);
 
-    // Main loop
-    while (running) {
-        sleep(33); // 33 ms = ~30 fps
-        update();
-        render();
-    }
+    // Register the specialKeys function for arrow key input
+    glutSpecialFunc(specialKeys);
 
-    // Note: The cleanup code is missing; you might want to add it here or in a separate function.
+    glutMainLoop();  // Start the GLUT main loop
 
     return 0;
 }
