@@ -41,17 +41,10 @@ int main(int argc, char** argv) {
     init();
 
     glutDisplayFunc(render);
-    glutTimerFunc(0, timer, 0); // Start the timer with a delay of 0 milliseconds
-    glutIdleFunc(idle); // Set the idle function
+    glutTimerFunc(0, timer, 0);
+    glutIdleFunc(idle);
 
-    // Main loop
-    while (running) {
-        sleep(33); // 33 ms = ~30 fps
-        update();
-        render();
-    }
-
-    // Note: The cleanup code is missing; you might want to add it here or in a separate function.
+    glutMainLoop();  // Start the GLUT main loop
 
     return 0;
 }
