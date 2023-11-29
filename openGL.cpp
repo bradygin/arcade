@@ -9,6 +9,9 @@ float playerX = 400.0;  // Initial X position of the player
 float playerY = 300.0;  // Initial Y position of the player
 float playerSize = 50.0;  // Size of the player
 
+const float screenWidth = 800.0;
+const float screenHeight = 600.0;
+
 void init() {
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glMatrixMode(GL_PROJECTION);
@@ -48,16 +51,20 @@ void idle() {
 void specialKeys(int key, int x, int y) {
     switch (key) {
         case GLUT_KEY_UP:
-            playerY += 10.0;  // Move up
+            if (playerY + playerSize < screenHeight)
+                playerY += 10.0;  // Move up
             break;
         case GLUT_KEY_DOWN:
-            playerY -= 10.0;  // Move down
+            if (playerY > 0)
+                playerY -= 10.0;  // Move down
             break;
         case GLUT_KEY_LEFT:
-            playerX -= 10.0;  // Move left
+            if (playerX > 0)
+                playerX -= 10.0;  // Move left
             break;
         case GLUT_KEY_RIGHT:
-            playerX += 10.0;  // Move right
+            if (playerX + playerSize < screenWidth)
+                playerX += 10.0;  // Move right
             break;
     }
 }
