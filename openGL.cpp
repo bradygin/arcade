@@ -1,4 +1,3 @@
-
 #define GL_SILENCE_DEPRECATION
 #include <OpenGL/gl.h>
 #include <GLUT/glut.h>
@@ -45,7 +44,14 @@ int main(int argc, char** argv) {
     glutTimerFunc(0, timer, 0); // Start the timer with a delay of 0 milliseconds
     glutIdleFunc(idle); // Set the idle function
 
-    glutMainLoop();
+    // Main loop
+    while (running) {
+        sleep(33); // 33 ms = ~30 fps
+        update();
+        render();
+    }
+
+    // Note: The cleanup code is missing; you might want to add it here or in a separate function.
 
     return 0;
 }
