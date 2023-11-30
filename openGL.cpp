@@ -1,9 +1,11 @@
 #define GL_SILENCE_DEPRECATION
+#include <string>
 #include <OpenGL/gl.h>
 #include <GLUT/glut.h>
 #include <unistd.h>
 
 bool running = true;
+void DrawLives();
 
 float playerX = 10.0;  // Initial X position of the player
 float playerY = 100.0;  // Initial Y position of the player
@@ -33,6 +35,8 @@ void update() {
     }
 }
 
+int lives = 3;
+
 void render() {
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -45,8 +49,28 @@ void render() {
     glVertex2f(playerX, playerY + playerSize);
     glEnd();
 
+    // Draw lives
+    DrawLives();
+
     glFlush();
 }
+
+void DrawLives() {
+    glColor3f(1.0, 1.0, 1.0);
+
+    // Adjust the position based on the screen dimensions
+    float xPos = screenWidth - 100.0; 
+    float yPos = screenHeight - 20.0; 
+
+    glRasterPos2f(xPos, yPos);
+
+    std::string livesText = "Lives: " + std::to_string(lives);
+
+    for (char const &c : livesText) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+    }
+}
+
 
 void timer(int value) {
     glutPostRedisplay(); // Request a redraw
