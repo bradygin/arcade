@@ -1,11 +1,13 @@
 #define GL_SILENCE_DEPRECATION
 #include <string>
+#include <vector>
 #include <OpenGL/gl.h>
 #include <GLUT/glut.h>
 #include <unistd.h>
 
 bool running = true;
 void DrawLives();
+std::vector<bool> hearts(3, true);
 
 float playerX = 10.0;  // Initial X position of the player
 float playerY = 100.0;  // Initial Y position of the player
@@ -16,6 +18,8 @@ const float screenHeight = 600.0;
 
 float jumpSpeed = 0.0;
 float gravity = -0.5;  // Gravity strength
+
+bool isJumping = false;
 
 void init() {
     glClearColor(0.529, 0.808, 0.922, 1.0);
@@ -32,6 +36,7 @@ void update() {
     if (playerY <= 0) {
         playerY = 0;
         jumpSpeed = 0.0;  // Reset jump speed when landed
+        isJumping = false;
     }
 }
 
@@ -59,8 +64,8 @@ void DrawLives() {
     glColor3f(1.0, 1.0, 1.0);
 
     // Adjust the position based on the screen dimensions
-    float xPos = screenWidth - 100.0; 
-    float yPos = screenHeight - 20.0; 
+    float xPos = screenWidth - 100.0; // Adjust this value as needed
+    float yPos = screenHeight - 20.0; // Adjust this value as needed
 
     glRasterPos2f(xPos, yPos);
 
@@ -86,9 +91,10 @@ void idle() {
 void specialKeys(int key, int x, int y) {
     switch (key) {
         case GLUT_KEY_UP:
-            if (playerY == 0) {
-                // Only jump if the player is on the ground
+            if (playerY == 0 && !isJumping) {
+                // Only jump if the player is on the ground and not already jumping
                 jumpSpeed = 10.0;
+                isJumping = true;
             }
             break;
         case GLUT_KEY_DOWN:
@@ -101,6 +107,19 @@ void specialKeys(int key, int x, int y) {
         case GLUT_KEY_RIGHT:
             if (playerX + playerSize < screenWidth)
                 playerX += 10.0;  // Move right
+            break;
+    }
+}
+
+// Function to handle space bar key press for jumping
+void keyboard(unsigned char key, int x, int y) {
+    switch (key) {
+        case 32: // ASCII code for space bar
+            if (playerY == 0 && !isJumping) {
+                // Only jump if the player is on the ground and not already jumping
+                jumpSpeed = 10.0;
+                isJumping = true;
+            }
             break;
     }
 }
@@ -119,6 +138,9 @@ int main(int argc, char** argv) {
 
     // Register the specialKeys function for arrow key input
     glutSpecialFunc(specialKeys);
+
+    // Register the keyboard function for space bar input
+    glutKeyboardFunc(keyboard);
 
     glutMainLoop();  // Start the GLUT main loop
 
