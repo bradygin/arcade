@@ -4,8 +4,8 @@
 This project is a simple 2D game developed using OpenGL and GLUT.
 
 ## Features
-- **Player Movement**: Control a red box using the arrow keys to move up, down, left, or right.
-- **NPCs**: The game includes randomly moving green boxes (NPCs) within the game window.
+- **Player Movement**: Control a box using the arrow keys to move up, down, left, or right.
+- **NPCs**: The game includes randomly moving boxes (NPCs) within the game window.
 - **Collision Detection**: NPCs change direction upon hitting the window boundaries.
 
 ## Prerequisites
