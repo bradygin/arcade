@@ -4,14 +4,52 @@
 #include <OpenGL/gl.h>
 #include <GLUT/glut.h>
 #include <unistd.h>
+#include <vector>
 
 bool running = true;
 void DrawLives();
 std::vector<bool> hearts(3, true);
 
-float playerX = 10.0;  // Initial X position of the player
-float playerY = 100.0;  // Initial Y position of the player
-float playerSize = 25.0;  // Size of the player
+float playerX = 400.0;  // Initial X position of the player
+float playerY = 300.0;  // Initial Y position of the player
+float playerSize = 50.0;  // Size of the player
+
+// NPC class definition
+class NPC {
+public:
+    float x, y;     // Position
+    float size;     // Size of the NPC
+    float dx, dy;   // Movement direction and speed
+
+    NPC(float startX, float startY, float npcSize) : x(startX), y(startY), size(npcSize) {
+        // Initialize movement direction and speed randomly
+        dx = (rand() % 20 - 10) / 10.0f;  // Random speed between -1 and 1
+        dy = (rand() % 20 - 10) / 10.0f;  // Random speed between -1 and 1
+    }
+
+    void move() {
+        // Update position
+        x += dx;
+        y += dy;
+
+        // Ensure NPC stays within window bounds
+        if (x < 0 || x > 800 - size) dx = -dx;
+        if (y < 0 || y > 600 - size) dy = -dy;
+    }
+
+    void draw() const {
+        glColor3f(0.0, 1.0, 0.0);  // Green color for NPCs
+        glBegin(GL_QUADS);
+        glVertex2f(x, y);
+        glVertex2f(x + size, y);
+        glVertex2f(x + size, y + size);
+        glVertex2f(x, y + size);
+        glEnd();
+    }
+
+};
+
+std::vector<NPC> npcs;
 
 const float screenWidth = 800.0;
 const float screenHeight = 600.0;
@@ -25,11 +63,19 @@ void init() {
     glClearColor(0.529, 0.808, 0.922, 1.0);
     glMatrixMode(GL_PROJECTION);
     gluOrtho2D(0, 800, 0, 600);
+
+    // Create NPCs
+    for (int i = 0; i < 3; i++) {
+        npcs.emplace_back(rand() % 800, rand() % 600, 30.0f); // Random position, size 30
+    }
 }
 
 void update() {
-    // Apply gravity
-    jumpSpeed += gravity;
+    // Update game logic 
+    for (auto& npc : npcs) {
+        npc.move();
+    }
+        jumpSpeed += gravity;
     playerY += jumpSpeed;
 
     // Check if the player has landed
@@ -53,6 +99,11 @@ void render() {
     glVertex2f(playerX + playerSize, playerY + playerSize);
     glVertex2f(playerX, playerY + playerSize);
     glEnd();
+
+    // Draw NPCs
+    for (const auto& npc : npcs) {
+        npc.draw();
+    }
 
     // Draw lives
     DrawLives();
@@ -135,8 +186,6 @@ int main(int argc, char** argv) {
     glutDisplayFunc(render);
     glutTimerFunc(0, timer, 0);
     glutIdleFunc(idle);
-
-    // Register the specialKeys function for arrow key input
     glutSpecialFunc(specialKeys);
 
     // Register the keyboard function for space bar input
