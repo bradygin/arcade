@@ -5,21 +5,32 @@
 
 bool running = true;
 
-float playerX = 400.0;  // Initial X position of the player
-float playerY = 300.0;  // Initial Y position of the player
-float playerSize = 50.0;  // Size of the player
+float playerX = 10.0;  // Initial X position of the player
+float playerY = 100.0;  // Initial Y position of the player
+float playerSize = 25.0;  // Size of the player
 
 const float screenWidth = 800.0;
 const float screenHeight = 600.0;
 
+float jumpSpeed = 0.0;
+float gravity = -0.5;  // Gravity strength
+
 void init() {
-    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClearColor(0.529, 0.808, 0.922, 1.0);
     glMatrixMode(GL_PROJECTION);
     gluOrtho2D(0, 800, 0, 600);
 }
 
 void update() {
-    // Update game logic here
+    // Apply gravity
+    jumpSpeed += gravity;
+    playerY += jumpSpeed;
+
+    // Check if the player has landed
+    if (playerY <= 0) {
+        playerY = 0;
+        jumpSpeed = 0.0;  // Reset jump speed when landed
+    }
 }
 
 void render() {
@@ -47,16 +58,17 @@ void idle() {
     render();
 }
 
-// Function to handle arrow key input for player movement
+// Function to handle arrow key input for player movement and jumping
 void specialKeys(int key, int x, int y) {
     switch (key) {
         case GLUT_KEY_UP:
-            if (playerY + playerSize < screenHeight)
-                playerY += 10.0;  // Move up
+            if (playerY == 0) {
+                // Only jump if the player is on the ground
+                jumpSpeed = 10.0;
+            }
             break;
         case GLUT_KEY_DOWN:
-            if (playerY > 0)
-                playerY -= 10.0;  // Move down
+            // You can add specific functionality for the down arrow if needed
             break;
         case GLUT_KEY_LEFT:
             if (playerX > 0)
