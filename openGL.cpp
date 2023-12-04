@@ -1,44 +1,42 @@
 #define GL_SILENCE_DEPRECATION
-#include <string>
-#include <vector>
-#include <OpenGL/gl.h>
-#include <GLUT/glut.h>
+#include <GL/glut.h>
 #include <unistd.h>
 #include <vector>
+#include <png.h>
+#include <iostream>
 
 bool running = true;
-void DrawLives();
-std::vector<bool> hearts(3, true);
 
-float playerX = 400.0;  // Initial X position of the player
-float playerY = 300.0;  // Initial Y position of the player
-float playerSize = 50.0;  // Size of the player
+float playerX = 50.0;
+float playerY = 50.0;
+float playerSize = 50.0;
+
+GLuint backgroundTexture;  // Variable to store the background texture ID
+float backgroundSizeX = 800.0;
+float backgroundSizeY = 600.0;
 
 // NPC class definition
 class NPC {
 public:
-    float x, y;     // Position
-    float size;     // Size of the NPC
-    float dx, dy;   // Movement direction and speed
+    float x, y;
+    float size;
+    float dx, dy;
 
     NPC(float startX, float startY, float npcSize) : x(startX), y(startY), size(npcSize) {
-        // Initialize movement direction and speed randomly
-        dx = (rand() % 20 - 10) / 10.0f;  // Random speed between -1 and 1
-        dy = (rand() % 20 - 10) / 10.0f;  // Random speed between -1 and 1
+        dx = (rand() % 20 - 10) / 10.0f;
+        dy = (rand() % 20 - 10) / 10.0f;
     }
 
     void move() {
-        // Update position
         x += dx;
         y += dy;
 
-        // Ensure NPC stays within window bounds
         if (x < 0 || x > 800 - size) dx = -dx;
         if (y < 0 || y > 600 - size) dy = -dy;
     }
 
     void draw() const {
-        glColor3f(0.0, 1.0, 0.0);  // Green color for NPCs
+        glColor3f(0.0, 1.0, 0.0);
         glBegin(GL_QUADS);
         glVertex2f(x, y);
         glVertex2f(x + size, y);
@@ -46,7 +44,6 @@ public:
         glVertex2f(x, y + size);
         glEnd();
     }
-
 };
 
 std::vector<NPC> npcs;
@@ -54,45 +51,119 @@ std::vector<NPC> npcs;
 const float screenWidth = 800.0;
 const float screenHeight = 600.0;
 
-float jumpSpeed = 0.0;
-float gravity = -0.5;  // Gravity strength
+//background rendering
+GLuint loadPNG(const char* filename, float* width, float* height) {
+    FILE* file = fopen(filename, "rb");
+    if (!file) {
+        std::cerr << "Error: Could not open file " << filename << std::endl;
+        return 0;
+    }
 
-bool isJumping = false;
+    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!png) {
+        fclose(file);
+        std::cerr << "Error: png_create_read_struct failed" << std::endl;
+        return 0;
+    }
+
+    png_infop info = png_create_info_struct(png);
+    if (!info) {
+        fclose(file);
+        png_destroy_read_struct(&png, NULL, NULL);
+        std::cerr << "Error: png_create_info_struct failed" << std::endl;
+        return 0;
+    }
+
+    if (setjmp(png_jmpbuf(png))) {
+        fclose(file);
+        png_destroy_read_struct(&png, &info, NULL);
+        std::cerr << "Error: Error during png_setjmp" << std::endl;
+        return 0;
+    }
+
+    png_init_io(png, file);
+    png_read_info(png, info);
+
+    // Ensure RGBA format
+    if (png_get_color_type(png, info) != PNG_COLOR_TYPE_RGBA) {
+        std::cerr << "Error: Unsupported color type (required RGBA)" << std::endl;
+        fclose(file);
+        png_destroy_read_struct(&png, &info, NULL);
+        return 0;
+    }
+
+    *width = static_cast<float>(png_get_image_width(png, info));
+    *height = static_cast<float>(png_get_image_height(png, info));
+
+    // Read image data
+    png_bytep* row_pointers = (png_bytep*)malloc(sizeof(png_bytep) * static_cast<size_t>(*height));
+    for (size_t y = 0; y < static_cast<size_t>(*height); y++) {
+        row_pointers[y] = (png_byte*)malloc(png_get_rowbytes(png, info));
+    }
+
+    png_read_image(png, row_pointers);
+
+    fclose(file);
+
+    // Create OpenGL texture and upload image data
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<GLsizei>(*width), static_cast<GLsizei>(*height), 0, GL_RGBA, GL_UNSIGNED_BYTE, row_pointers[0]);
+
+    // Set texture parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Clean up
+    for (size_t y = 0; y < static_cast<size_t>(*height); y++) {
+        free(row_pointers[y]);
+    }
+    free(row_pointers);
+
+    png_destroy_read_struct(&png, &info, NULL);
+
+    return textureID;
+}
+
 
 void init() {
-    glClearColor(0.529, 0.808, 0.922, 1.0);
+    glClearColor(0.0, 0.0, 0.0, 0.0);
     glMatrixMode(GL_PROJECTION);
     gluOrtho2D(0, 800, 0, 600);
 
+    // Load the background texture using libpng
+    backgroundTexture = loadPNG("background.png", &backgroundSizeX, &backgroundSizeY);
+
     // Create NPCs
     for (int i = 0; i < 3; i++) {
-        npcs.emplace_back(rand() % 800, rand() % 600, 30.0f); // Random position, size 30
+        npcs.emplace_back(rand() % 800, rand() % 600, 30.0f);
     }
 }
 
 void update() {
-    // Update game logic 
+    // Update NPCs
     for (auto& npc : npcs) {
         npc.move();
     }
-        jumpSpeed += gravity;
-    playerY += jumpSpeed;
-
-    // Check if the player has landed
-    if (playerY <= 0) {
-        playerY = 0;
-        jumpSpeed = 0.0;  // Reset jump speed when landed
-        isJumping = false;
-    }
 }
-
-int lives = 3;
 
 void render() {
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // Draw the background
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, backgroundTexture);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0, 0.0); glVertex2f(0, 0);
+    glTexCoord2f(1.0, 0.0); glVertex2f(backgroundSizeX, 0);
+    glTexCoord2f(1.0, 1.0); glVertex2f(backgroundSizeX, backgroundSizeY);
+    glTexCoord2f(0.0, 1.0); glVertex2f(0, backgroundSizeY);
+    glEnd();
+    glDisable(GL_TEXTURE_2D);
+
     // Draw the player as a red box
-    glColor3f(1.0, 0.0, 0.0);  // Red color
+    glColor3f(1.0, 0.0, 0.0);
     glBegin(GL_QUADS);
     glVertex2f(playerX, playerY);
     glVertex2f(playerX + playerSize, playerY);
@@ -105,28 +176,8 @@ void render() {
         npc.draw();
     }
 
-    // Draw lives
-    DrawLives();
-
     glFlush();
 }
-
-void DrawLives() {
-    glColor3f(1.0, 1.0, 1.0);
-
-    // Adjust the position based on the screen dimensions
-    float xPos = screenWidth - 100.0; // Adjust this value as needed
-    float yPos = screenHeight - 20.0; // Adjust this value as needed
-
-    glRasterPos2f(xPos, yPos);
-
-    std::string livesText = "Lives: " + std::to_string(lives);
-
-    for (char const &c : livesText) {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
-    }
-}
-
 
 void timer(int value) {
     glutPostRedisplay(); // Request a redraw
@@ -135,21 +186,17 @@ void timer(int value) {
 
 void idle() {
     update();
-    render();
 }
 
-// Function to handle arrow key input for player movement and jumping
 void specialKeys(int key, int x, int y) {
     switch (key) {
         case GLUT_KEY_UP:
-            if (playerY == 0 && !isJumping) {
-                // Only jump if the player is on the ground and not already jumping
-                jumpSpeed = 10.0;
-                isJumping = true;
-            }
+            if (playerY + playerSize < screenHeight)
+                playerY += 10.0;  // Move up
             break;
         case GLUT_KEY_DOWN:
-            // You can add specific functionality for the down arrow if needed
+            if (playerY > 0)
+                playerY -= 10.0;  // Move down
             break;
         case GLUT_KEY_LEFT:
             if (playerX > 0)
@@ -158,19 +205,6 @@ void specialKeys(int key, int x, int y) {
         case GLUT_KEY_RIGHT:
             if (playerX + playerSize < screenWidth)
                 playerX += 10.0;  // Move right
-            break;
-    }
-}
-
-// Function to handle space bar key press for jumping
-void keyboard(unsigned char key, int x, int y) {
-    switch (key) {
-        case 32: // ASCII code for space bar
-            if (playerY == 0 && !isJumping) {
-                // Only jump if the player is on the ground and not already jumping
-                jumpSpeed = 10.0;
-                isJumping = true;
-            }
             break;
     }
 }
@@ -188,10 +222,7 @@ int main(int argc, char** argv) {
     glutIdleFunc(idle);
     glutSpecialFunc(specialKeys);
 
-    // Register the keyboard function for space bar input
-    glutKeyboardFunc(keyboard);
-
-    glutMainLoop();  // Start the GLUT main loop
+    glutMainLoop();
 
     return 0;
 }
