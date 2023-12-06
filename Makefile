@@ -1,15 +1,13 @@
-# Makefile for arcadeGame
-
 # Compiler settings
 CXX = g++
 CXXFLAGS = -std=c++17
 LDFLAGS = -lGL -lGLU -lglut -lpng
 
 # Target executable
-TARGET = arcadeGame
+TARGET = brick
 
 # Source files
-SOURCES = openGL.cpp
+SOURCES = BrickBreaker.cpp
 
 # Object files
 OBJECTS = $(SOURCES:.cpp=.o)
