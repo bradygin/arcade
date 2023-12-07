@@ -61,18 +61,20 @@ void drawTitlePage() {
     glPushMatrix();
     glLoadIdentity();
 
-    // Set text color
-    glColor3f(1.0, 1.0, 1.0); // White color
-
     if (gameOver) {
+        // Set text color to white
+        glColor3f(1.0, 1.0, 1.0); // White color
+
         // Game Over screen
         std::string gameOverText = "Game Over! Press 'R' to Restart, or 'Q' to quit";
-        int gameOverTextWidth = gameOverText.length() * 10;
-        int gameOverTextX = (glutGet(GLUT_WINDOW_WIDTH) - gameOverTextWidth) / 2;
-        glRasterPos2f(gameOverTextX, 300);
+        int textWidth = glutBitmapLength(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)gameOverText.c_str());
+        int textX = (glutGet(GLUT_WINDOW_WIDTH) - textWidth) / 2;
+        int textY = glutGet(GLUT_WINDOW_HEIGHT) / 2; // Center vertically
+        glRasterPos2f(textX, textY);
         for (char c : gameOverText) {
             glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
         }
+		glColor3f(1.0, 1.0, 1.0); // Reset to white color
     } else {
         // Start screen
         std::string title = "Brick Breaker Game";
@@ -339,39 +341,54 @@ void addMenu()
 
 
 
-//Function to print the score on the screen
+// Function to print the score and lives on the screen
 void text(int sc) {
     glDisable(GL_LIGHTING);
-    char text[40];
 
-    if (sc < 50) {
-        snprintf(text, sizeof(text), "  Your Score: %d", sc);
-    } else {
-        snprintf(text, sizeof(text), "YOU WIN!!");
-        start = 0;
-        by = -12.94;
-        bx = 0;
-        dirx = 0;
-        diry = 0;
-        px = 0;
+    // Set up an orthographic projection for text rendering
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0.0, glutGet(GLUT_WINDOW_WIDTH), 0.0, glutGet(GLUT_WINDOW_HEIGHT));
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
 
-    }
-	// Display lives
+    // Display score
+    char score_text[40];
+    snprintf(score_text, sizeof(score_text), "Score: %d", sc);
+
+    // Display lives
     char lives_text[40];
     snprintf(lives_text, sizeof(lives_text), "Lives: %d", lives);
-    glRasterPos3f(0, -1, 20);
-    for (int i = 0; lives_text[i] != '\0'; i++)
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, lives_text[i]);
-    // Display the regular score message
+
+    // Calculate position based on window size
+    int textY = glutGet(GLUT_WINDOW_HEIGHT) - 50; // Adjust position to be visible
+
     glColor4fv(text_color1[text_color]);
-    glPushMatrix();
-    glTranslatef(-1, 0, 0);
-    glRasterPos3f(0, 0, 20);
-    for (int i = 0; text[i] != '\0'; i++)
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, text[i]);
-    glEnable(GL_LIGHTING);
+
+    // Render score text
+    glRasterPos2f(10, textY); // Position on the left side
+    for (char* c = score_text; *c != '\0'; c++) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+    }
+
+    // Render lives text
+    glRasterPos2f(glutGet(GLUT_WINDOW_WIDTH) - 150, textY); // Position on the right side
+    for (char* c = lives_text; *c != '\0'; c++) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+    }
+
+    // Restore the previous projection and modelview matrices
+    glMatrixMode(GL_PROJECTION);
     glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+
+    glEnable(GL_LIGHTING);
 }
+
+
 
 
 //The main display function
