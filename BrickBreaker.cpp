@@ -345,7 +345,6 @@ void addMenu()
 	glutAddSubMenu("Difficulty",submenu3);
 	glutAddSubMenu("Paddle Size",submenu6);
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
-	
 }
 
 // Function to print the score and lives on the screen
