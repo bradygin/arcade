@@ -62,29 +62,44 @@ void drawTitlePage() {
     glPushMatrix();
     glLoadIdentity();
 
-    // Define title and controls text
-    std::string title = "Brick Breaker Game";
-    std::string controls = "Press 'S' to Start, 'A' and 'D' to move";
+    if (gameOver) {
+        // Set text color to white
+        glColor3f(1.0, 1.0, 1.0); // White color
 
-    // Set text color
-    glColor3f(1.0, 1.0, 1.0); // White color
+        // Game Over screen
+        std::string gameOverText = "Game Over! Press 'R' to Restart, or 'Q' to quit";
+        int textWidth = glutBitmapLength(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)gameOverText.c_str());
+        int textX = (glutGet(GLUT_WINDOW_WIDTH) - textWidth) / 2;
+        int textY = glutGet(GLUT_WINDOW_HEIGHT) / 2; // Center vertically
+        glRasterPos2f(textX, textY);
+        for (char c : gameOverText) {
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+        }
+    } else {
+        // Define title and controls text
+        std::string title = "Brick Breaker Game";
+        std::string controls = "Press 'S' to Start, 'A' and 'D' to move";
 
-    // Center and render the title text
-    int titleWidth = glutBitmapLength(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)title.c_str());
-    int titleX = (glutGet(GLUT_WINDOW_WIDTH) - titleWidth) / 2;
-    int titleY = glutGet(GLUT_WINDOW_HEIGHT) / 2 + 50; // Position slightly above center
-    glRasterPos2f(titleX, titleY);
-    for (char c : title) {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
-    }
+        // Set text color
+        glColor3f(1.0, 1.0, 1.0); // White color
 
-    // Center and render the controls text
-    int controlsWidth = glutBitmapLength(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)controls.c_str());
-    int controlsX = (glutGet(GLUT_WINDOW_WIDTH) - controlsWidth) / 2;
-    int controlsY = titleY - 30; // Position below the title
-    glRasterPos2f(controlsX, controlsY);
-    for (char c : controls) {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+        // Center and render the title text
+        int titleWidth = glutBitmapLength(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)title.c_str());
+        int titleX = (glutGet(GLUT_WINDOW_WIDTH) - titleWidth) / 2;
+        int titleY = glutGet(GLUT_WINDOW_HEIGHT) / 2 + 50; // Position slightly above center
+        glRasterPos2f(titleX, titleY);
+        for (char c : title) {
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+        }
+
+        // Center and render the controls text
+        int controlsWidth = glutBitmapLength(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)controls.c_str());
+        int controlsX = (glutGet(GLUT_WINDOW_WIDTH) - controlsWidth) / 2;
+        int controlsY = titleY - 30; // Position below the title
+        glRasterPos2f(controlsX, controlsY);
+        for (char c : controls) {
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+        }
     }
 
     // Restore the previous matrices
@@ -97,6 +112,7 @@ void drawTitlePage() {
     // Swap buffers to display
     glutSwapBuffers();
 }
+
 
 
 // Function to draw the paddle
@@ -386,7 +402,7 @@ void text(int sc) {
 
 //The main display function
 void display (void) {
-	    if (atTitlePage) {
+	    if (atTitlePage || gameOver) {
         drawTitlePage();
         return;
     }
