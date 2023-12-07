@@ -8,6 +8,7 @@
 #include <string>
 
 int score = 0;
+int lives = 3;
 int brick_color = 0,ball_color = 2,level = 0,paddle_color = 2,text_color = 3,size = 1;;
 GLfloat twoModel[]={GL_TRUE};
 int game_level[] = {5};
@@ -73,6 +74,18 @@ void drawTitlePage() {
     glRasterPos2f(controls_x, 350); // Adjust position as needed
     for (char c : controls) {
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+    }
+
+	    // If the game is over (no lives left)
+    if (lives <= 0) {
+        std::string gameOver = "Game Over! Press 'R' to Restart";
+        int gameOver_width = gameOver.length() * 10;
+        int gameOver_x = (glutGet(GLUT_WINDOW_WIDTH) - gameOver_width) / 2;
+
+        glRasterPos2f(gameOver_x, 300); // Adjust position as needed
+        for (char c : gameOver) {
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+        }
     }
 
     // Restore the previous matrices
@@ -339,7 +352,12 @@ void text(int sc) {
         px = 0;
 
     }
-
+	// Display lives
+    char lives_text[40];
+    snprintf(lives_text, sizeof(lives_text), "Lives: %d", lives);
+    glRasterPos3f(0, -1, 20);
+    for (int i = 0; lives_text[i] != '\0'; i++)
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, lives_text[i]);
     // Display the regular score message
     glColor4fv(text_color1[text_color]);
     glPushMatrix();
@@ -419,6 +437,7 @@ void keyboard(unsigned char key, int x, int y) {
         }
         return; // Ignore other keys at the title page
     }
+
 
     // Handle other keyboard interactions when the game is running
     switch (key) {
@@ -502,12 +521,20 @@ void idle()
     }
     else if (by < -13)
     {
-        start = 0;
-        by = -12.8;
-        bx = 0;
-        dirx = 0;
-        diry = 0;
-        px = 0;
+    	lives--;
+		if (lives > 0) {
+			// Restart the game while keeping the score and lives
+			start = 0;
+			bx = 0;
+			by = -12.94;
+			dirx = 1;
+			diry = 1;
+			px = 0;
+		} else {
+			// Go to the end page
+			atTitlePage = true; // Reuse the title page flag for the end page
+			start = 0;
+		}
     }
 
     glutPostRedisplay();
