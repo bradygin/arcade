@@ -1,10 +1,11 @@
 #define GL_SILENCE_DEPRECATION
-#include <stdlib.h>
-#include <GL/glut.h>
+#include <OpenGL/gl.h>
+#include <GLUT/glut.h>
 #include <unistd.h>
-#include <stdio.h>
+#include <vector>
 #include <string.h>
 #include <math.h>
+#include <string>
 
 int score = 0;
 int brick_color = 0,ball_color = 2,level = 0,paddle_color = 2,text_color = 3,size = 1;;
@@ -31,6 +32,59 @@ struct brick_coords{
 brick_coords brick_array[50][50];
 GLfloat px,bx = 0,by = -12.94 ,speed = 0,dirx=0,diry=0,start = 0;
 
+// Global variable to track if the game is at the title page
+bool atTitlePage = true;
+
+// Function to draw the title page
+void drawTitlePage() {
+    // Clear the screen
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Set up an orthographic projection
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0.0, glutGet(GLUT_WINDOW_WIDTH), 0.0, glutGet(GLUT_WINDOW_HEIGHT));
+
+    // Switch back to modelview matrix
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    // Set text color
+    glColor3f(1.0, 1.0, 1.0); // White color
+
+    // Centering the text on the screen
+    std::string title = "Brick Breaker Game";
+    int title_width = title.length() * 10; // Approx width of each character in pixels
+    int title_x = (glutGet(GLUT_WINDOW_WIDTH) - title_width) / 2;
+
+    glRasterPos2f(title_x, 400); // Centered position
+    for (char c : title) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+    }
+
+    // Render controls info below the title
+    std::string controls = "Press 'S' to Start, 'A' and 'D' to move";
+    int controls_width = controls.length() * 10; // Approx width of each character in pixels
+    int controls_x = (glutGet(GLUT_WINDOW_WIDTH) - controls_width) / 2;
+
+    glRasterPos2f(controls_x, 350); // Adjust position as needed
+    for (char c : controls) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+    }
+
+    // Restore the previous matrices
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+
+    // Swap buffers to display
+    glutSwapBuffers();
+}
 
 
 // Function to draw the paddle
@@ -300,7 +354,10 @@ void text(int sc) {
 
 //The main display function
 void display (void) {
-	
+	    if (atTitlePage) {
+        drawTitlePage();
+        return;
+    }
 	glClearColor (0.0,0.0,0.0,1.0);
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
@@ -331,40 +388,69 @@ void reshape (int w, int h) {
 	glMatrixMode (GL_MODELVIEW);
 }
 
+// Function to initialize the game state
+void initializeGame() {
+    for (int i = 1; i <= rows; i++) {
+        for (int j = 1; j <= columns; j++) {
+            brick_array[i][j].x = (GLfloat)(j * 4 * 0.84);
+            brick_array[i][j].y = (GLfloat)(i * 2 * 0.6);
+        }
+    }
+    // Reset other game states as necessary
+    bx = 0;
+    by = -12.94;
+    dirx = 1; // Set initial horizontal direction
+    diry = 1; // Set initial vertical direction
+    px = 0;
+    score = 0;
+    rate = game_level[level];
+}
 
-//function to take in keyboard entries
-void keyboard (unsigned char key, int x, int y)
-{
-	switch(key)
-	{
-		case 'd': px+=3; break;
-		case 'a': px-=3; break;
-		case 'q': exit(0); break;
-		case 's':
-		if(!start)
-		{
-			dirx = diry= 1;
-			rate = game_level[level];
-			start = 1;
-			score = 0;
-			glutSetCursor(GLUT_CURSOR_NONE);
-			
-		}
-		break;
-	}
-	if(px>15)
-	{
-		px=15;
-	}
-	if(px<-15)
-	{
-		px=-15;
-	}
-	if(start== 0)
-	{
-		px=0;
-	}
-	glutPostRedisplay();
+// Function to handle keyboard inputs
+void keyboard(unsigned char key, int x, int y) {
+    // Check if the game is currently at the title page
+    if (atTitlePage) {
+        // Start the game when 'S' is pressed
+        if (key == 's' || key == 'S') {
+            atTitlePage = false; // Exit title page
+            start = 1;           // Start the game
+			initializeGame();
+            glutSetCursor(GLUT_CURSOR_NONE); // Hide the cursor
+        }
+        return; // Ignore other keys at the title page
+    }
+
+    // Handle other keyboard interactions when the game is running
+    switch (key) {
+        case 'd': 
+        case 'D': 
+            px += 3; 
+            break;
+        case 'a': 
+        case 'A': 
+            px -= 3; 
+            break;
+        case 'q': 
+        case 'Q': 
+            exit(0); // Quit the game
+            break;
+    }
+
+    // Ensure the paddle stays within game boundaries
+    if (px > 15) {
+        px = 15;
+    }
+    if (px < -15) {
+        px = -15;
+    }
+
+    // Reset paddle position if the game hasn't started
+    if (start == 0) {
+        px = 0;
+    }
+
+    // Request a redraw of the window
+    glutPostRedisplay();
 }
 
 
@@ -435,6 +521,7 @@ int main (int argc,char **argv) {
 	glutInitWindowSize (1025, 900);
 	glutInitWindowPosition (100, 100);
 	glutCreateWindow ("Brick Breaker");
+	initializeGame();
 	glutDisplayFunc (display);
 	glutReshapeFunc (reshape);
 	glEnable(GL_DEPTH_TEST);
@@ -442,7 +529,6 @@ int main (int argc,char **argv) {
 	glutPassiveMotionFunc(mousemotion);
 	glutKeyboardFunc(keyboard);
 	lightsOn();
-	
 	glutMainLoop ();
 	return 0;
 }
