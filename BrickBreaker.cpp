@@ -348,8 +348,6 @@ void addMenu()
 	
 }
 
-
-
 // Function to print the score and lives on the screen
 void text(int sc) {
     glDisable(GL_LIGHTING);
@@ -397,9 +395,6 @@ void text(int sc) {
     glEnable(GL_LIGHTING);
 }
 
-
-
-
 //The main display function
 void display (void) {
 	    if (atTitlePage || gameOver) {
@@ -417,8 +412,6 @@ void display (void) {
 	text(score);
 	glutSwapBuffers();
 }
-
-
 
 //function to turn on lights
 void lightsOn()
@@ -445,7 +438,6 @@ void initializeGame() {
             brick_array[i][j].y = (GLfloat)(i * 2 * 0.6);
         }
     }
-
     // Random number generation for ball direction
     std::random_device rd;  // Obtain a random number from hardware
     std::mt19937 eng(rd()); // Seed the generator
@@ -525,7 +517,6 @@ void keyboard(unsigned char key, int x, int y) {
     glutPostRedisplay();
 }
 
-
 //Function to handle the case when the ball strikes the bricks
 void hit()
 {
@@ -546,7 +537,6 @@ void hit()
 			}
 		}
 }
-
 
 //The idle function. Handles the motion of the ball along with rebounding from various surfaces
 void idle()
@@ -597,7 +587,6 @@ void idle()
 
     glutPostRedisplay();
 }
-
 
 int main (int argc,char **argv) {
 	glutInit(&argc,argv);
