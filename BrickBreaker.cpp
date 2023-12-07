@@ -9,6 +9,8 @@
 
 int score = 0;
 int lives = 3;
+bool atTitlePage = true;
+bool gameOver = false;
 int brick_color = 0,ball_color = 2,level = 0,paddle_color = 2,text_color = 3,size = 1;;
 GLfloat twoModel[]={GL_TRUE};
 int game_level[] = {5};
@@ -33,8 +35,14 @@ struct brick_coords{
 brick_coords brick_array[50][50];
 GLfloat px,bx = 0,by = -12.94 ,speed = 0,dirx=0,diry=0,start = 0;
 
-// Global variable to track if the game is at the title page
-bool atTitlePage = true;
+void initializeBricks() {
+    for (int i = 1; i <= rows; i++) {
+        for (int j = 1; j <= columns; j++) {
+            brick_array[i][j].x = (GLfloat)(j * 4 * 0.84);
+            brick_array[i][j].y = (GLfloat)(i * 2 * 0.6);
+        }
+    }
+}
 
 // Function to draw the title page
 void drawTitlePage() {
@@ -56,34 +64,30 @@ void drawTitlePage() {
     // Set text color
     glColor3f(1.0, 1.0, 1.0); // White color
 
-    // Centering the text on the screen
-    std::string title = "Brick Breaker Game";
-    int title_width = title.length() * 10; // Approx width of each character in pixels
-    int title_x = (glutGet(GLUT_WINDOW_WIDTH) - title_width) / 2;
+    if (gameOver) {
+        // Game Over screen
+        std::string gameOverText = "Game Over! Press 'R' to Restart, or 'Q' to quit";
+        int gameOverTextWidth = gameOverText.length() * 10;
+        int gameOverTextX = (glutGet(GLUT_WINDOW_WIDTH) - gameOverTextWidth) / 2;
+        glRasterPos2f(gameOverTextX, 300);
+        for (char c : gameOverText) {
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+        }
+    } else {
+        // Start screen
+        std::string title = "Brick Breaker Game";
+        int titleWidth = title.length() * 10;
+        int titleX = (glutGet(GLUT_WINDOW_WIDTH) - titleWidth) / 2;
+        glRasterPos2f(titleX, 400);
+        for (char c : title) {
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+        }
 
-    glRasterPos2f(title_x, 400); // Centered position
-    for (char c : title) {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
-    }
-
-    // Render controls info below the title
-    std::string controls = "Press 'S' to Start, 'A' and 'D' to move";
-    int controls_width = controls.length() * 10; // Approx width of each character in pixels
-    int controls_x = (glutGet(GLUT_WINDOW_WIDTH) - controls_width) / 2;
-
-    glRasterPos2f(controls_x, 350); // Adjust position as needed
-    for (char c : controls) {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
-    }
-
-	    // If the game is over (no lives left)
-    if (lives <= 0) {
-        std::string gameOver = "Game Over! Press 'R' to Restart";
-        int gameOver_width = gameOver.length() * 10;
-        int gameOver_x = (glutGet(GLUT_WINDOW_WIDTH) - gameOver_width) / 2;
-
-        glRasterPos2f(gameOver_x, 300); // Adjust position as needed
-        for (char c : gameOver) {
+        std::string controls = "Press 'S' to Start, 'A' and 'D' to move";
+        int controlsWidth = controls.length() * 10;
+        int controlsX = (glutGet(GLUT_WINDOW_WIDTH) - controlsWidth) / 2;
+        glRasterPos2f(controlsX, 350);
+        for (char c : controls) {
             glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
         }
     }
@@ -408,6 +412,7 @@ void reshape (int w, int h) {
 
 // Function to initialize the game state
 void initializeGame() {
+	initializeBricks();
     for (int i = 1; i <= rows; i++) {
         for (int j = 1; j <= columns; j++) {
             brick_array[i][j].x = (GLfloat)(j * 4 * 0.84);
@@ -434,7 +439,18 @@ void keyboard(unsigned char key, int x, int y) {
             start = 1;           // Start the game
 			initializeGame();
             glutSetCursor(GLUT_CURSOR_NONE); // Hide the cursor
-        }
+        }	
+		// Restart the game when 'R' is pressed
+		if (key == 'r' or key == 'R') {
+			if (gameOver) {
+				gameOver = false; // Reset game over flag
+				lives = 3; // Reset lives
+				score = 0; // Reset score
+				initializeGame(); // Reinitialize the game
+				atTitlePage = false; // Exit the title/game over screen
+				start = 1; // Start the game
+			}
+		}
         return; // Ignore other keys at the title page
     }
 
@@ -498,48 +514,52 @@ void hit()
 //The idle function. Handles the motion of the ball along with rebounding from various surfaces
 void idle()
 {
-    hit();
-    if (bx < -16 || bx > 16 && start == 1)
-    {
-        dirx = dirx * -1;
-    }
-    if (by < -15 || by > 14 && start == 1)
-    {
-        diry = diry * -1;
-    }
-    bx += dirx / (rate);
-    by += diry / (rate);
-    rate -= 0.001;
+	if (start == 1) {
+		hit();
 
-    float x = paddle_size[size];
+		// Adjust boundary check for horizontal movement
+		if (bx < -16 || bx > 16) { // Assuming -16 and 16 are the left and right bounds
+			dirx = -dirx; // Invert horizontal direction
+		}
 
-    // Check for collision with paddle
-    if (by <= -12.8 && bx < (px + x) && bx > (px - x) && start == 1)
-    {
-        dirx = dirx;
-        diry = 1;
-    }
-    else if (by < -13)
-    {
-    	lives--;
-		if (lives > 0) {
-			// Restart the game while keeping the score and lives
-			start = 0;
-			bx = 0;
-			by = -12.94;
-			dirx = 1;
-			diry = 1;
-			px = 0;
-		} else {
-			// Go to the end page
-			atTitlePage = true; // Reuse the title page flag for the end page
-			start = 0;
+		// Adjust boundary check for vertical movement
+		if (by < -15 || by > 14) { // Assuming -15 and 14 are the bottom and top bounds
+			diry = -diry; // Invert vertical direction
+		}
+
+		// Ball movement logic
+		bx += dirx / rate;
+		by += diry / rate;
+		rate -= 0.001;
+
+		float x = paddle_size[size];
+
+		// Check for collision with paddle
+		if (by <= -12.8 && bx < (px + x) && bx > (px - x) && start == 1) {
+			diry = 1; // Ball moves up after hitting the paddle
+		} 
+		else if (by < -13)
+		{
+			lives--;
+			if (lives > 0) {
+				// Restart the game while keeping the score and lives
+				start = 1;
+				bx = 0;
+				by = -12.94;
+				dirx = 1;
+				diry = 1;
+				px = 0;
+				initializeBricks();
+			} else if (lives <=0) {
+				// Go to the end page
+				gameOver = true;
+				atTitlePage = true; // Reuse the title page flag for the end page
+			}
 		}
     }
 
     glutPostRedisplay();
 }
-
 
 
 int main (int argc,char **argv) {
