@@ -1,25 +1,27 @@
-# OpenGL 2D Arcade Game Project
+# Brick Breaker Game
 
 ## Introduction
-This project is a simple 2D game developed using OpenGL and GLUT.
+Brick Breaker is a simple 2D arcade game developed using OpenGL and GLUT. 
 
 ## Features
-- **Player Movement**: Control a box using the arrow keys to move up, down, left, or right.
-- **NPCs**: The game includes randomly moving boxes (NPCs) within the game window.
-- **Collision Detection**: NPCs change direction upon hitting the window boundaries.
+- **Dynamic Gameplay**: Control a paddle to hit a ball and break bricks.
+- **Scoring System**: Gain points for each brick broken.
+- **Lives**: Start with a set number of lives and lose a life when the ball falls below the paddle.
 
 ## Prerequisites
 - OpenGL
 - GLUT
 
 ## Installation
-To run this project, you need to have OpenGL and GLUT installed on your system.
+Ensure you have OpenGL and GLUT installed on your system to run this game.
 
 ### How to Compile and Run
 - Run `make` to compile the project
-- Then `./arcadeGame` to run the project and open up the game window.
-- Alternatively, you can do this in one line with `make && ./arcadeGame`
+- Then `./brick` to run the project and open up the game window.
+- Alternatively, you can do this in one line with `make && ./brick`
 
-## Usage
-- Use arrow keys to move the player box.
-- Observe the NPCs moving randomly within the window.
+## Gameplay Controls
+- Press 'S' to start the game.
+- Use 'A' and 'D' keys to move the paddle left and right, respectively. Alternatively, you can use your mouse curser to control the paddle.
+- Press 'R' to restart the game after a game over.
+- Press 'Q' to quit the game.
