@@ -67,7 +67,7 @@ void drawTitlePage() {
         glColor3f(1.0, 1.0, 1.0); // White color
 
         // Game Over screen
-        std::string gameOverText = "Game Over! Press 'R' to Restart, or 'Q' to quit";
+        std::string gameOverText = "Game Over! Press 'R' to Restart";
         int textWidth = glutBitmapLength(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)gameOverText.c_str());
         int textX = (glutGet(GLUT_WINDOW_WIDTH) - textWidth) / 2;
         int textY = glutGet(GLUT_WINDOW_HEIGHT) / 2; // Center vertically
