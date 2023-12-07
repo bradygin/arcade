@@ -6,6 +6,7 @@
 #include <string.h>
 #include <math.h>
 #include <string>
+#include <random>
 
 int score = 0;
 int lives = 3;
@@ -61,37 +62,29 @@ void drawTitlePage() {
     glPushMatrix();
     glLoadIdentity();
 
-    if (gameOver) {
-        // Set text color to white
-        glColor3f(1.0, 1.0, 1.0); // White color
+    // Define title and controls text
+    std::string title = "Brick Breaker Game";
+    std::string controls = "Press 'S' to Start, 'A' and 'D' to move";
 
-        // Game Over screen
-        std::string gameOverText = "Game Over! Press 'R' to Restart, or 'Q' to quit";
-        int textWidth = glutBitmapLength(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)gameOverText.c_str());
-        int textX = (glutGet(GLUT_WINDOW_WIDTH) - textWidth) / 2;
-        int textY = glutGet(GLUT_WINDOW_HEIGHT) / 2; // Center vertically
-        glRasterPos2f(textX, textY);
-        for (char c : gameOverText) {
-            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
-        }
-		glColor3f(1.0, 1.0, 1.0); // Reset to white color
-    } else {
-        // Start screen
-        std::string title = "Brick Breaker Game";
-        int titleWidth = title.length() * 10;
-        int titleX = (glutGet(GLUT_WINDOW_WIDTH) - titleWidth) / 2;
-        glRasterPos2f(titleX, 400);
-        for (char c : title) {
-            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
-        }
+    // Set text color
+    glColor3f(1.0, 1.0, 1.0); // White color
 
-        std::string controls = "Press 'S' to Start, 'A' and 'D' to move";
-        int controlsWidth = controls.length() * 10;
-        int controlsX = (glutGet(GLUT_WINDOW_WIDTH) - controlsWidth) / 2;
-        glRasterPos2f(controlsX, 350);
-        for (char c : controls) {
-            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
-        }
+    // Center and render the title text
+    int titleWidth = glutBitmapLength(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)title.c_str());
+    int titleX = (glutGet(GLUT_WINDOW_WIDTH) - titleWidth) / 2;
+    int titleY = glutGet(GLUT_WINDOW_HEIGHT) / 2 + 50; // Position slightly above center
+    glRasterPos2f(titleX, titleY);
+    for (char c : title) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+    }
+
+    // Center and render the controls text
+    int controlsWidth = glutBitmapLength(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)controls.c_str());
+    int controlsX = (glutGet(GLUT_WINDOW_WIDTH) - controlsWidth) / 2;
+    int controlsY = titleY - 30; // Position below the title
+    glRasterPos2f(controlsX, controlsY);
+    for (char c : controls) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
     }
 
     // Restore the previous matrices
@@ -429,18 +422,29 @@ void reshape (int w, int h) {
 
 // Function to initialize the game state
 void initializeGame() {
-	initializeBricks();
+    initializeBricks();
     for (int i = 1; i <= rows; i++) {
         for (int j = 1; j <= columns; j++) {
             brick_array[i][j].x = (GLfloat)(j * 4 * 0.84);
             brick_array[i][j].y = (GLfloat)(i * 2 * 0.6);
         }
     }
-    // Reset other game states as necessary
+
+    // Random number generation for ball direction
+    std::random_device rd;  // Obtain a random number from hardware
+    std::mt19937 eng(rd()); // Seed the generator
+    std::uniform_int_distribution<> distr(-1, 1); // Define the range
+
+    do {
+        dirx = distr(eng); // Generate a random number for x direction
+    } while (dirx == 0);  // Ensure dirx is not zero
+
+    do {
+        diry = distr(eng); // Generate a random number for y direction
+    } while (diry == 0);  // Ensure diry is not zero
+
     bx = 0;
     by = -12.94;
-    dirx = 1; // Set initial horizontal direction
-    diry = 1; // Set initial vertical direction
     px = 0;
     score = 0;
     rate = game_level[level];
