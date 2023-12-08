@@ -1,6 +1,6 @@
 #define GL_SILENCE_DEPRECATION
-#include <OpenGL/gl.h>
-#include <GLUT/glut.h>
+#include <stdlib.h>
+#include <GL/glut.h>
 #include <unistd.h>
 #include <vector>
 #include <string.h>
@@ -12,7 +12,6 @@ int score = 0;
 int lives = 3;
 bool atTitlePage = true;
 bool gameOver = false;
-bool isGamePaused = false;
 int brick_color = 0,ball_color = 2,level = 0,paddle_color = 2,text_color = 3,size = 1;;
 GLfloat twoModel[]={GL_TRUE};
 int game_level[] = {5};
@@ -68,7 +67,7 @@ void drawTitlePage() {
         glColor3f(1.0, 1.0, 1.0); // White color
 
         // Game Over screen
-        std::string gameOverText = "Game Over! Press 'R' to Restart";
+        std::string gameOverText = "Game Over! Press `R' to Restart or `CMD + Q' to end";
         int textWidth = glutBitmapLength(GLUT_BITMAP_HELVETICA_18, (const unsigned char*)gameOverText.c_str());
         int textX = (glutGet(GLUT_WINDOW_WIDTH) - textWidth) / 2;
         int textY = glutGet(GLUT_WINDOW_HEIGHT) / 2; // Center vertically
@@ -79,7 +78,7 @@ void drawTitlePage() {
     } else {
         // Define title and controls text
         std::string title = "Brick Breaker Game";
-        std::string controls = "Press 'S' to Start, 'A' and 'D' to move";
+        std::string controls = "Press `S' to Start, `A' and `D' or your mouse to move left and right";
 
         // Set text color
         glColor3f(1.0, 1.0, 1.0); // White color
@@ -460,50 +459,29 @@ void initializeGame() {
 
 // Function to handle keyboard inputs
 void keyboard(unsigned char key, int x, int y) {
-    // Check if the game is currently at the title page or paused
-    if (atTitlePage || isGamePaused) {
-        switch (key) {
-            case 's':
-            case 'S':
-                if (atTitlePage) {
-                    atTitlePage = false; // Exit title page
-                    start = 1;           // Start the game
-                    initializeGame();
-                    glutSetCursor(GLUT_CURSOR_NONE); // Hide the cursor
-                }
-                break;
-            case 'd':
-            case 'D':
-            case 'a':
-            case 'A':
-                if (isGamePaused) {
-                    // Resume the game when 'D', 'A', or 'S' is pressed
-                    isGamePaused = false;
-                    start = 1;
-                    // Reset ball and paddle positions and directions
-                    bx = 0;
-                    by = -12.94;
-                    dirx = 1; // Adjust as needed for your game logic
-                    diry = 1;
-                    px = 0;
-                    initializeBricks();
-                }
-                break;
-            case 'r':
-            case 'R':
-                if (gameOver) {
-                    // Restart the game after game over
-                    gameOver = false;
-                    lives = 3;
-                    score = 0;
-                    initializeGame();
-                    atTitlePage = false;
-                    start = 1;
-                }
-                break;
-        }
-        return; // Ignore other keys at the title page or when paused
+    // Check if the game is currently at the title page
+    if (atTitlePage) {
+        // Start the game when 'S' is pressed
+        if (key == 's' || key == 'S') {
+            atTitlePage = false; // Exit title page
+            start = 1;           // Start the game
+			initializeGame();
+            glutSetCursor(GLUT_CURSOR_NONE); // Hide the cursor
+        }	
+		// Restart the game when 'R' is pressed
+		if (key == 'r' or key == 'R') {
+			if (gameOver) {
+				gameOver = false; // Reset game over flag
+				lives = 3; // Reset lives
+				score = 0; // Reset score
+				initializeGame(); // Reinitialize the game
+				atTitlePage = false; // Exit the title/game over screen
+				start = 1; // Start the game
+			}
+		}
+        return; // Ignore other keys at the title page
     }
+
 
     // Handle other keyboard interactions when the game is running
     switch (key) {
@@ -562,7 +540,7 @@ void hit()
 //The idle function. Handles the motion of the ball along with rebounding from various surfaces
 void idle()
 {
-	if (start == 1 && !isGamePaused) {
+	if (start == 1) {
 		hit();
 
 		// Adjust boundary check for horizontal movement
@@ -591,7 +569,6 @@ void idle()
 			lives--;
 			if (lives > 0) {
 				// Restart the game while keeping the score and lives
-				isGamePaused = true;
 				start = 1;
 				bx = 0;
 				by = -12.94;

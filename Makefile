@@ -1,7 +1,7 @@
 # Compiler settings
 CXX = g++
 CXXFLAGS = -std=c++17
-LDFLAGS = -framework OpenGL -framework GLUT
+LDFLAGS = -lGL -lGLU -lglut -lpng
 
 # Target executable
 TARGET = brick
